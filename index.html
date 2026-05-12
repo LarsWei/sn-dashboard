@@ -174,11 +174,46 @@ body{font-family:'Inter',sans-serif;background:var(--bg-dark);color:var(--text);
 .header{padding:1rem}.kpi-strip,.legend-strip,.admin-strip{padding-left:1rem;padding-right:1rem}
 .th-name,.uc-name-cell{width:150px;min-width:150px;padding-left:1rem}.th-progress,.uc-progress-cell{width:70px;min-width:70px}
 }
+
+.live-badge{display:inline-block;background:#28A745;color:#fff;font-size:.58rem;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.5px;margin-left:4px;vertical-align:middle;user-select:none}
+.live-badge.off{opacity:.15;cursor:pointer}
+.reorder-btns{display:none;flex-direction:column;gap:0;margin-left:auto;flex-shrink:0}
+.reorder-btns.visible{display:flex}
+.reorder-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.55rem;padding:0 3px;line-height:1;transition:all .15s}
+.reorder-btn:hover{color:var(--accent);transform:scale(1.3)}
+.publish-btn{background:#28A745;color:#fff;padding:6px 16px;border-radius:8px;font-weight:600;font-size:.78rem;border:none;cursor:pointer;transition:all .2s;font-family:inherit}
+.publish-btn:hover{background:#218838;transform:translateY(-1px)}
+.publish-msg{font-size:.72rem;color:#28A745;display:none;align-items:center;gap:4px}
+.publish-msg.show{display:inline-flex}
+.editable-hint{border-bottom:1px dashed rgba(0,176,185,.4)!important;cursor:text;transition:border .2s;padding-bottom:1px}
+.editable-hint:hover{border-bottom-color:var(--accent)!important}
+.editable-hint:focus{outline:none;border-bottom-color:var(--primary)!important;border-bottom-style:solid!important}
+.color-section{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.color-pick{display:flex;align-items:center;gap:4px;font-size:.68rem;color:var(--text-muted);font-weight:500}
+.color-pick input[type="color"]{width:26px;height:22px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:transparent;padding:0}
+.color-pick input[type="color"]::-webkit-color-swatch-wrapper{padding:1px}
+.color-pick input[type="color"]::-webkit-color-swatch{border:none;border-radius:2px}
+.admin-strip-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%}
+.admin-strip-row+.admin-strip-row{border-top:1px solid rgba(42,58,74,.4);padding-top:8px;margin-top:4px}
+.row-drag-handle{cursor:grab;color:var(--border);padding:0 2px;font-size:.72rem;user-select:none;display:none;transition:color .15s;flex-shrink:0}
+.row-drag-handle.visible{display:inline-flex;align-items:center}
+.row-drag-handle:hover{color:var(--accent)}
+.row-drag-handle:active{cursor:grabbing}
+.uc-row.drag-over{border-top:2px solid var(--accent);background:rgba(0,153,153,.06)}
+.uc-row.live-row{background:rgba(40,167,69,.06)}
+.uc-row.live-row:hover{background:rgba(40,167,69,.12)}
+.uc-row.live-row .uc-name-cell{background:rgba(40,167,69,.06)}
+.uc-row.live-row:hover .uc-name-cell{background:rgba(40,167,69,.12)}
+.uc-row.live-row .uc-progress-cell{background:rgba(40,167,69,.06)}
+.uc-row.live-row:hover .uc-progress-cell{background:rgba(40,167,69,.12)}
+.uc-row.live-row .uc-timeline-cell{background:rgba(40,167,69,.04)}
+.uc-row.live-row:hover .uc-timeline-cell{background:rgba(40,167,69,.08)}
+
 </style>
 </head>
 <body>
 <div class="header">
-<div class="header-left"><div class="logo-box">SN</div><div class="header-title"><h1>ServiceNow Project Portfolio</h1><p>SHS IT GD&amp;AI – Intelligent Process Automation</p></div></div>
+<div class="header-left"><div class="logo-box">SN</div><div class="header-title"><h1 id="siteTitle">ServiceNow Project Portfolio</h1><p id="siteSubtitle">SHS IT GD&amp;AI – Intelligent Process Automation</p></div></div>
 <div class="header-right">
 <div class="admin-badge" id="adminBadge"><div class="badge-dot"></div><span>Admin</span><button class="admin-logout" onclick="doLogout()" title="Abmelden">&#x2715; Logout</button></div>
 <button class="admin-toggle" id="adminToggle" onclick="handleAdminClick()">&#x1F512; Admin Mode</button>
@@ -197,21 +232,37 @@ body{font-family:'Inter',sans-serif;background:var(--bg-dark);color:var(--text);
 </div></div>
 
 <div class="admin-strip" id="adminStrip">
+<div class="admin-strip-row">
 <label>&#x1F511; Passwort:</label><input type="password" id="pwNew" placeholder="Neues Passwort..." onkeydown="if(event.key==='Enter')changePassword()">
 <button class="as-btn" onclick="changePassword()">&#xC4;ndern</button><span class="as-msg" id="pwChangeMsg">&#x2714; Gespeichert!</span>
 <div class="as-sep"></div>
 <label>&#x1F4C5; Timeline von:</label><input type="month" id="tlStartInput" onchange="updateTimelineRange()">
 <label>bis:</label><input type="month" id="tlEndInput" onchange="updateTimelineRange()">
-<span style="margin-left:auto"></span>
+<div class="as-sep"></div>
 <button class="as-btn danger" onclick="resetData()">&#x27F2; Auf Standard zur&#xFC;cksetzen</button>
+<span style="margin-left:auto"></span>
+<button class="publish-btn" onclick="publishSite()">&#x1F4BE; Save &amp; Publish</button>
+<span class="publish-msg" id="publishMsg">&#x2714; Published &amp; Downloaded!</span>
+</div>
+<div class="admin-strip-row">
+<label>&#x1F3A8; Farben:</label>
+<div class="color-section">
+<div class="color-pick"><label>Primary</label><input type="color" id="cpPrimary" onchange="onColorChange()" oninput="onColorChange()"></div>
+<div class="color-pick"><label>Accent</label><input type="color" id="cpAccent" onchange="onColorChange()" oninput="onColorChange()"></div>
+<div class="color-pick"><label>BG Dark</label><input type="color" id="cpBgDark" onchange="onColorChange()" oninput="onColorChange()"></div>
+<div class="color-pick"><label>Card BG</label><input type="color" id="cpBgCard" onchange="onColorChange()" oninput="onColorChange()"></div>
+</div>
+<div class="as-sep"></div>
+<span style="font-size:.68rem;color:var(--text-muted)">&#x1F4A1; Klicke im Admin-Modus auf Texte um sie zu bearbeiten</span>
+</div>
 </div>
 
 <div class="kpi-strip">
-<div class="kpi-card"><div class="kpi-label">Total Use Cases</div><div class="kpi-value" id="kpiTotal">0</div><div class="kpi-sub">Overall</div></div>
-<div class="kpi-card"><div class="kpi-label">In Production</div><div class="kpi-value" id="kpiProd">0</div><div class="kpi-sub">&#x2705; Live</div></div>
-<div class="kpi-card"><div class="kpi-label">In Development</div><div class="kpi-value" id="kpiDev">0</div><div class="kpi-sub">&#x1F6A7; Active</div></div>
-<div class="kpi-card"><div class="kpi-label">Total Savings</div><div class="kpi-value" id="kpiSavings">~4,920 h/yr</div><div class="kpi-sub">&#x2248; &#x20AC;380k / year</div></div>
-<div class="kpi-card"><div class="kpi-label">Avg. Completion</div><div class="kpi-value" id="kpiAvg">0%</div><div class="kpi-sub">Portfolio</div></div>
+<div class="kpi-card"><div class="kpi-label" id="kpiLabel0">Total Use Cases</div><div class="kpi-value" id="kpiTotal">0</div><div class="kpi-sub" id="kpiSub0">Overall</div></div>
+<div class="kpi-card"><div class="kpi-label" id="kpiLabel1">In Production</div><div class="kpi-value" id="kpiProd">0</div><div class="kpi-sub" id="kpiSub1">&#x2705; Live</div></div>
+<div class="kpi-card"><div class="kpi-label" id="kpiLabel2">In Development</div><div class="kpi-value" id="kpiDev">0</div><div class="kpi-sub" id="kpiSub2">&#x1F6A7; Active</div></div>
+<div class="kpi-card"><div class="kpi-label" id="kpiLabel3">Total Savings</div><div class="kpi-value" id="kpiSavings"><span id="kpiSavingsVal">~4,920 h/yr</span></div><div class="kpi-sub" id="kpiSub3">&#x2248; &#x20AC;380k / year</div></div>
+<div class="kpi-card"><div class="kpi-label" id="kpiLabel4">Avg. Completion</div><div class="kpi-value" id="kpiAvg">0%</div><div class="kpi-sub" id="kpiSub4">Portfolio</div></div>
 </div>
 
 <div class="legend-strip">
@@ -221,7 +272,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg-dark);color:var(--text);
 <div class="legend-item"><div class="legend-dot" style="background:#FFC107"></div>Testing / UAT</div>
 <div class="legend-item"><div class="legend-dot" style="background:#28A745"></div>Go-Live</div>
 <div class="legend-item"><div class="legend-dot" style="background:#00B0B9"></div>Production</div>
-<div class="scroll-hint">Shift + Mausrad = Timeline scrollen</div>
+<div class="scroll-hint" id="scrollHint">Shift + Mausrad = Timeline scrollen</div>
 </div>
 
 <div class="main">
@@ -235,12 +286,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg-dark);color:var(--text);
 </div>
 
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()"><div class="modal" id="modal"></div></div>
-<div class="footer"><p>&#xA9; 2026 <span>Siemens Healthineers</span> &#xB7; IT GD&amp;AI Intelligent Process Automation &#xB7; ServiceNow Custom Applications</p></div>
+<div class="footer"><p id="footerText">&#xA9; 2026 <span>Siemens Healthineers</span> &#xB7; IT GD&amp;AI Intelligent Process Automation &#xB7; ServiceNow Custom Applications</p></div>
 
 <script>
-var DEFAULT_PW='IPA2026!',DEFAULT_TL_START='2024-01',DEFAULT_TL_END='2027-06',MONTH_W=48;
+/*TL_DEFAULTS_START*/var DEFAULT_PW='IPA2026!',DEFAULT_TL_START='2024-01',DEFAULT_TL_END='2027-06',MONTH_W=48;/*TL_DEFAULTS_END*/
 var PHASE_NAMES=["Requirements","Design","Development","Testing / UAT","Go-Live","Production"];
 var PHASE_COLORS={"Requirements":"#6C757D","Design":"#17A2B8","Development":"#009999","Testing / UAT":"#FFC107","Go-Live":"#28A745","Production":"#00B0B9"};
+/*SITECONFIG_START*/var DEFAULT_SITE_CONFIG={headerTitle:"ServiceNow Project Portfolio",headerSubtitle:"SHS IT GD&AI \u2013 Intelligent Process Automation",kpis:[{label:"Total Use Cases",sub:"Overall"},{label:"In Production",sub:"\u2705 Live"},{label:"In Development",sub:"\ud83d\udea7 Active"},{label:"Total Savings",sub:"\u2248 \u20ac380k / year",value:"~4,920 h/yr"},{label:"Avg. Completion",sub:"Portfolio"}],footerText:"\u00a9 2026 <span>Siemens Healthineers</span> \u00b7 IT GD&AI Intelligent Process Automation \u00b7 ServiceNow Custom Applications",scrollHint:"Shift + Mausrad = Timeline scrollen",colors:{primary:"#009999",primaryDark:"#007777",accent:"#00B0B9",bgDark:"#0F1923",bgCard:"#1A2735"}};/*SITECONFIG_END*/
+var siteConfig;
 var tlStart,tlEnd,TOTAL_MONTHS,ucData=[],adminMode=false,dragState=null;
 
 function getAdminPw(){return localStorage.getItem('sn_admin_pw')||DEFAULT_PW}
@@ -261,14 +314,14 @@ var s=document.getElementById('tlStartInput').value,e=document.getElementById('t
 if(s)localStorage.setItem('sn_tl_start',s);if(e)localStorage.setItem('sn_tl_end',e);
 buildTimeline();render();scrollToToday();
 }
-function resetData(){if(!confirm('Alle Aenderungen zuruecksetzen?'))return;localStorage.removeItem('sn_uc_data');localStorage.removeItem('sn_tl_start');localStorage.removeItem('sn_tl_end');loadData();buildTimeline();render();scrollToToday()}
+function resetData(){if(!confirm('Alle Aenderungen zuruecksetzen?'))return;localStorage.removeItem('sn_uc_data');localStorage.removeItem('sn_tl_start');localStorage.removeItem('sn_tl_end');localStorage.removeItem('sn_site_config');loadSiteConfig();loadData();buildTimeline();render();applySiteConfig();scrollToToday()}
 function handleAdminClick(){if(adminMode){exitAdmin();return}if(isAuth())enterAdmin();else openLogin()}
 function openLogin(){document.getElementById('loginOverlay').classList.add('open');document.getElementById('loginPw').value='';document.getElementById('loginError').classList.remove('show');setTimeout(function(){document.getElementById('loginPw').focus()},200)}
 function closeLogin(){document.getElementById('loginOverlay').classList.remove('open')}
 function doLogin(){var pw=document.getElementById('loginPw').value;if(pw===getAdminPw()){setAuth(true);closeLogin();enterAdmin()}else{document.getElementById('loginError').classList.add('show');var b=document.getElementById('loginBox');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');document.getElementById('loginPw').value='';document.getElementById('loginPw').focus()}}
 function doLogout(){setAuth(false);exitAdmin()}
-function enterAdmin(){adminMode=true;document.getElementById('adminToggle').classList.add('active');document.getElementById('adminToggle').innerHTML='&#x1F513; Admin Mode';document.getElementById('adminBadge').classList.add('visible');document.getElementById('adminStrip').classList.add('visible');document.getElementById('addUcRow').classList.add('visible');render()}
-function exitAdmin(){adminMode=false;document.getElementById('adminToggle').classList.remove('active');document.getElementById('adminToggle').innerHTML='&#x1F512; Admin Mode';document.getElementById('adminBadge').classList.remove('visible');document.getElementById('adminStrip').classList.remove('visible');document.getElementById('addUcRow').classList.remove('visible');render()}
+function enterAdmin(){adminMode=true;document.getElementById('adminToggle').classList.add('active');document.getElementById('adminToggle').innerHTML='&#x1F513; Admin Mode';document.getElementById('adminBadge').classList.add('visible');document.getElementById('adminStrip').classList.add('visible');document.getElementById('addUcRow').classList.add('visible');enableEditableTexts();render()}
+function exitAdmin(){adminMode=false;document.getElementById('adminToggle').classList.remove('active');document.getElementById('adminToggle').innerHTML='&#x1F512; Admin Mode';document.getElementById('adminBadge').classList.remove('visible');document.getElementById('adminStrip').classList.remove('visible');document.getElementById('addUcRow').classList.remove('visible');disableEditableTexts();render()}
 function changePassword(){var p=document.getElementById('pwNew').value.trim();if(p.length<4){alert('Mindestens 4 Zeichen.');return}localStorage.setItem('sn_admin_pw',p);document.getElementById('pwNew').value='';var m=document.getElementById('pwChangeMsg');m.style.display='inline';setTimeout(function(){m.style.display='none'},3000)}
 
 function pM(s){var p=s.split('-');return new Date(parseInt(p[0]),parseInt(p[1])-1)}
@@ -319,7 +372,7 @@ hdr+='</div>';
 document.getElementById('tlHeader').innerHTML=hdr;
 var html='';
 ucData.forEach(function(uc,idx){
-var st=stOf(uc),ckCls=uc.done?'':'unchecked',admCk=adminMode?' admin-clickable':'';
+var st=stOf(uc);
 var bars='';
 for(var g=0;g<TOTAL_MONTHS;g++){bars+='<div class="month-gridline" style="left:'+(g*MONTH_W)+'px"></div>';}
 if(tpx>=0&&tpx<=tlW){bars+='<div class="today-marker" style="left:'+tpx+'px;top:0;bottom:0"></div>';}
@@ -331,20 +384,30 @@ var handles=adminMode?'<div class="drag-handle-l" data-idx="'+idx+'" data-pi="'+
 bars+='<div class="phase-bar'+drg+'" style="left:'+l+'px;width:'+Math.max(w,4)+'px;background:'+col+'" data-idx="'+idx+'" data-pi="'+pi+'">'+handles+'<div class="phase-tooltip">'+ph.name+': '+ph.start+' &gt; '+ph.end+'</div></div>';
 });
 var del=adminMode?'<button class="uc-del-btn visible" onclick="event.stopPropagation();deleteUc('+idx+')" title="Loeschen">&#x1F5D1;</button>':'';
-html+='<div class="uc-row" onclick="rowClick('+idx+')"><div class="uc-name-cell"><div class="uc-status-badge '+st+'"></div><div class="uc-name-text">'+esc(uc.name)+'<span class="uc-check '+ckCls+admCk+'" onclick="event.stopPropagation();toggleDone('+idx+')">&#x2714;</span></div>'+del+'</div><div class="uc-progress-cell"><div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:'+uc.pct+'%;background:'+pctC(uc.pct)+'"></div></div><div class="progress-pct">'+uc.pct+'%</div></div></div><div class="uc-timeline-cell" style="width:'+tlW+'px;min-width:'+tlW+'px" id="tlc_'+idx+'">'+bars+'</div></div>';
+var liveHtml='';
+if(uc.done&&uc.showLive!==false){liveHtml='<span class="live-badge" onclick="event.stopPropagation();toggleDone('+idx+')">LIVE</span>';}
+else if(uc.done&&uc.showLive===false){liveHtml=adminMode?'<span class="live-badge" onclick="event.stopPropagation();toggleDone('+idx+')" style="opacity:.2;display:inline-block">LIVE</span>':'';}
+else if(adminMode){liveHtml='<span class="live-badge" onclick="event.stopPropagation();toggleDone('+idx+')" style="opacity:.15;display:inline-block">LIVE</span>';}
+var dragH=adminMode?'<span class="row-drag-handle visible" title="Drag to reorder">&#x2630;</span>':'';
+var reorderH=adminMode?'<div class="reorder-btns visible"><button class="reorder-btn" onclick="moveUc('+idx+',-1)" title="Nach oben">&#x25B2;</button><button class="reorder-btn" onclick="moveUc('+idx+',1)" title="Nach unten">&#x25BC;</button></div>':'';
+var liveRowCls=(uc.done&&uc.showLive!==false)?' live-row':'';
+html+='<div class="uc-row'+liveRowCls+'" onclick="rowClick('+idx+')">'+
+'<div class="uc-name-cell">'+dragH+'<div class="uc-status-badge '+st+'"></div><div class="uc-name-text">'+esc(uc.name)+liveHtml+'</div>'+reorderH+del+'</div>'+
+'<div class="uc-progress-cell"><div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:'+uc.pct+'%;background:'+pctC(uc.pct)+'"></div></div><div class="progress-pct">'+uc.pct+'%</div></div></div>'+
+'<div class="uc-timeline-cell" style="width:'+tlW+'px;min-width:'+tlW+'px" id="tlc_'+idx+'">'+bars+'</div></div>';
 });
 document.getElementById('ucRows').innerHTML=html;
 updateKPIs();
-if(adminMode)initDrag();
+if(adminMode){initDrag();initRowDrag();}
 }
 
-function toggleDone(i){if(!adminMode)return;ucData[i].done=!ucData[i].done;if(ucData[i].done)ucData[i].pct=100;saveData();render()}
+function toggleDone(i){if(!adminMode)return;ucData[i].done=!ucData[i].done;if(ucData[i].done){ucData[i].pct=100;ucData[i].showLive=true;}else{ucData[i].showLive=false;}saveData();render()}
 function deleteUc(i){if(!confirm('Use Case "'+ucData[i].name+'" wirklich loeschen?'))return;ucData.splice(i,1);saveData();render()}
 function rowClick(i){if(adminMode)openEditModal(i);else openViewModal(i)}
 
 function openViewModal(i){
 var uc=ucData[i];if(!uc)return;
-var sl=uc.done?'In Production':uc.pct>=40?'In Progress':'Early Stage';
+var sl=uc.done?'In Production'+(uc.showLive!==false?' <span class="live-badge">LIVE</span>':''):uc.pct>=40?'In Progress':'Early Stage';
 var pr='';uc.phases.forEach(function(ph){pr+='<div class="phase-row"><div class="phase-dot" style="background:'+(PHASE_COLORS[ph.name]||'#666')+'"></div><div class="phase-name">'+ph.name+'</div><div class="phase-dates">'+ph.start+' &gt; '+ph.end+'</div></div>'});
 document.getElementById('modal').innerHTML='<button class="modal-close" onclick="closeModal()">&#x2715;</button><h2>'+esc(uc.name)+'</h2><span class="modal-status '+stOf(uc)+'">'+sl+' - '+uc.pct+'%</span><div class="description">'+esc(uc.desc)+'</div><div class="detail-grid"><div class="detail-item"><div class="detail-label">Business Area</div><div class="detail-value">'+esc(uc.business)+'</div></div><div class="detail-item"><div class="detail-label">Key Contact(s)</div><div class="detail-value">'+esc(uc.contact)+'</div></div><div class="detail-item"><div class="detail-label">Savings</div><div class="detail-value">'+esc(uc.savings)+'</div></div><div class="detail-item"><div class="detail-label">Department</div><div class="detail-value">SHS IT GD&amp;AI IPA</div></div></div><h3 style="font-size:.85rem;margin-top:1rem;color:var(--text-muted)">Project Phases</h3><div class="phase-timeline">'+pr+'</div>';
 document.getElementById('modalOverlay').classList.add('open');
@@ -352,14 +415,14 @@ document.getElementById('modalOverlay').classList.add('open');
 
 function openEditModal(idx){
 var isNew=idx===null;
-var uc=isNew?{id:genId(),name:'',pct:0,done:false,business:'',contact:'',savings:'',desc:'',phases:[{name:'Requirements',start:toMS(new Date()),end:toMS(new Date())}]}:JSON.parse(JSON.stringify(ucData[idx]));
+var uc=isNew?{id:genId(),name:'',pct:0,done:false,showLive:false,business:'',contact:'',savings:'',desc:'',phases:[{name:'Requirements',start:toMS(new Date()),end:toMS(new Date())}]}:JSON.parse(JSON.stringify(ucData[idx]));
 var phH='';uc.phases.forEach(function(ph,i){phH+=peRow(ph,i)});
 var h='<button class="modal-close" onclick="closeModal()">&#x2715;</button>';
 h+='<h2>'+(isNew?'Neuen Use Case anlegen':'Use Case bearbeiten')+'</h2>';
 h+='<div class="edit-section"><h3>Allgemein</h3><div class="edit-row"><div class="edit-field"><label>Name</label><input id="e_name" value="'+esc(uc.name)+'"></div><div class="edit-field"><label>Business Area</label><input id="e_biz" value="'+esc(uc.business)+'"></div></div>';
 h+='<div class="edit-row"><div class="edit-field"><label>Key Contact(s)</label><input id="e_contact" value="'+esc(uc.contact)+'"></div><div class="edit-field"><label>Savings</label><input id="e_savings" value="'+esc(uc.savings)+'"></div></div>';
 h+='<div class="edit-row"><div class="edit-field full"><label>Beschreibung</label><textarea id="e_desc" rows="3">'+esc(uc.desc)+'</textarea></div></div>';
-h+='<div class="edit-row"><div class="edit-field" style="max-width:200px"><label>Fortschritt: <strong id="e_pct_v">'+uc.pct+'%</strong></label><input type="range" id="e_pct" min="0" max="100" value="'+uc.pct+'" oninput="document.getElementById(\'e_pct_v\').textContent=this.value+\'%\'"></div><div class="edit-field" style="max-width:200px"><div class="done-toggle-row"><input type="checkbox" id="e_done" '+(uc.done?'checked':'')+' onchange="if(this.checked)document.getElementById(\'e_pct\').value=100,document.getElementById(\'e_pct_v\').textContent=\'100%\'"><label for="e_done">Abgeschlossen (&#x2714;)</label></div></div></div></div>';
+h+='<div class="edit-row"><div class="edit-field" style="max-width:200px"><label>Fortschritt: <strong id="e_pct_v">'+uc.pct+'%</strong></label><input type="range" id="e_pct" min="0" max="100" value="'+uc.pct+'" oninput="document.getElementById(\'e_pct_v\').textContent=this.value+\'%\'"></div><div class="edit-field" style="max-width:200px"><div class="done-toggle-row"><input type="checkbox" id="e_done" '+(uc.done?'checked':'')+' onchange="if(this.checked){document.getElementById(\'e_pct\').value=100;document.getElementById(\'e_pct_v\').textContent=\'100%\';document.getElementById(\'showLiveRow\').style.display=\'\';}else{document.getElementById(\'showLiveRow\').style.display=\'none\';}"><label for="e_done">Abgeschlossen</label></div></div><div class="edit-field" style="max-width:200px"><div class="done-toggle-row" id="showLiveRow" style="'+(uc.done?'':'display:none')+'"><input type="checkbox" id="e_showLive" '+(uc.showLive!==false?'checked':'')+' ><label for="e_showLive">LIVE Badge anzeigen</label></div></div></div></div>';
 h+='<div class="edit-section"><h3>Phasen</h3><div id="e_phases">'+phH+'</div><button class="phase-add-btn" onclick="addPR()">&#xFF0B; Phase hinzufuegen</button></div>';
 h+='<div class="edit-actions"><div class="left"><button class="btn-save" onclick="saveEdit('+(isNew?'null':idx)+')">&#x1F4BE; Speichern</button><button class="btn-cancel" onclick="closeModal()">Abbrechen</button></div>';
 if(!isNew)h+='<button class="btn-delete" onclick="delFromEdit('+idx+')">&#x1F5D1; Loeschen</button>';
@@ -379,7 +442,7 @@ if(!nm){alert('Name erforderlich.');return}
 var phases=[],rows=document.querySelectorAll('.phase-edit-row'),ok=true;
 rows.forEach(function(r){var n=r.querySelector('.pe-name').value,s=r.querySelector('.pe-start').value,e=r.querySelector('.pe-end').value;if(!s||!e){ok=false;return}phases.push({name:n,start:s,end:e})});
 if(!ok){alert('Alle Phasen-Daten ausfuellen.');return}
-var uc={id:isNew?genId():ucData[idx].id,name:nm,pct:parseInt(document.getElementById('e_pct').value),done:document.getElementById('e_done').checked,business:document.getElementById('e_biz').value.trim(),contact:document.getElementById('e_contact').value.trim(),savings:document.getElementById('e_savings').value.trim(),desc:document.getElementById('e_desc').value.trim(),phases:phases};
+var isDone=document.getElementById('e_done').checked;var uc={id:isNew?genId():ucData[idx].id,name:nm,pct:parseInt(document.getElementById('e_pct').value),done:isDone,showLive:isDone?document.getElementById('e_showLive').checked:false,business:document.getElementById('e_biz').value.trim(),contact:document.getElementById('e_contact').value.trim(),savings:document.getElementById('e_savings').value.trim(),desc:document.getElementById('e_desc').value.trim(),phases:phases};
 if(uc.done)uc.pct=100;
 if(isNew)ucData.push(uc);else ucData[idx]=uc;
 saveData();closeModal();render();
@@ -417,24 +480,142 @@ if(e.shiftKey){e.preventDefault();this.scrollLeft+=(e.deltaY||e.deltaX);}
 
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closeLogin()}});
 
-var DEFAULT_DATA=[
-{id:"nam-tax",name:"NAM Tax",pct:100,done:true,business:"NAM Finance / Tax",contact:"Andrew Baer",savings:"~800 h/year",desc:"Digital case management workflow for NAM tax certificate handling including automated email communication, CertCapture & Vertex data integration, and customer outreach tracking.",phases:[{name:"Requirements",start:"2022-06",end:"2022-09"},{name:"Design",start:"2022-10",end:"2022-12"},{name:"Development",start:"2023-01",end:"2025-12"},{name:"Testing / UAT",start:"2026-01",end:"2026-04"},{name:"Go-Live",start:"2026-04",end:"2026-04"},{name:"Production",start:"2026-04",end:"2026-12"}]},
-{id:"mcp",name:"MCP Germany / Swiss",pct:100,done:true,business:"MCP Operations",contact:"Guido Barth",savings:"License cost reduction (PEGA retirement)",desc:"Complete migration of MCP application from PEGA to ServiceNow platform.",phases:[{name:"Requirements",start:"2024-01",end:"2024-03"},{name:"Design",start:"2024-04",end:"2024-06"},{name:"Development",start:"2024-07",end:"2026-01"},{name:"Testing / UAT",start:"2026-02",end:"2026-03"},{name:"Go-Live",start:"2026-04",end:"2026-04"},{name:"Production",start:"2026-04",end:"2026-12"}]},
+
+
+// ===== SITE CONFIG FUNCTIONS =====
+function loadSiteConfig(){var s=localStorage.getItem('sn_site_config');if(s){try{siteConfig=JSON.parse(s);return}catch(e){}}siteConfig=JSON.parse(JSON.stringify(DEFAULT_SITE_CONFIG))}
+function saveSiteConfig(){localStorage.setItem('sn_site_config',JSON.stringify(siteConfig))}
+function applySiteConfig(){
+var st=document.getElementById('siteTitle');if(st)st.textContent=siteConfig.headerTitle;
+var ss=document.getElementById('siteSubtitle');if(ss)ss.textContent=siteConfig.headerSubtitle;
+for(var i=0;i<5;i++){
+var lbl=document.getElementById('kpiLabel'+i);if(lbl)lbl.textContent=siteConfig.kpis[i].label;
+var sub=document.getElementById('kpiSub'+i);if(sub)sub.innerHTML=siteConfig.kpis[i].sub;
+}
+if(siteConfig.kpis[3]&&siteConfig.kpis[3].value){var sv=document.getElementById('kpiSavingsVal');if(sv)sv.textContent=siteConfig.kpis[3].value;}
+var ft=document.getElementById('footerText');if(ft)ft.innerHTML=siteConfig.footerText;
+var sh=document.getElementById('scrollHint');if(sh)sh.textContent=siteConfig.scrollHint;
+applyColors();
+}
+function applyColors(){
+if(!siteConfig||!siteConfig.colors)return;
+var r=document.documentElement.style;
+r.setProperty('--primary',siteConfig.colors.primary);
+r.setProperty('--primary-dark',siteConfig.colors.primaryDark);
+r.setProperty('--accent',siteConfig.colors.accent);
+r.setProperty('--bg-dark',siteConfig.colors.bgDark);
+r.setProperty('--bg-card',siteConfig.colors.bgCard);
+var cp=document.getElementById('cpPrimary');if(cp)cp.value=siteConfig.colors.primary;
+var ca=document.getElementById('cpAccent');if(ca)ca.value=siteConfig.colors.accent;
+var cd=document.getElementById('cpBgDark');if(cd)cd.value=siteConfig.colors.bgDark;
+var cc=document.getElementById('cpBgCard');if(cc)cc.value=siteConfig.colors.bgCard;
+}
+function onColorChange(){
+siteConfig.colors.primary=document.getElementById('cpPrimary').value;
+siteConfig.colors.accent=document.getElementById('cpAccent').value;
+siteConfig.colors.bgDark=document.getElementById('cpBgDark').value;
+siteConfig.colors.bgCard=document.getElementById('cpBgCard').value;
+siteConfig.colors.primaryDark=darkenColor(siteConfig.colors.primary,20);
+applyColors();saveSiteConfig();
+}
+function darkenColor(hex,pct){
+var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+r=Math.max(0,Math.floor(r*(1-pct/100)));g=Math.max(0,Math.floor(g*(1-pct/100)));b=Math.max(0,Math.floor(b*(1-pct/100)));
+return '#'+[r,g,b].map(function(c){return c.toString(16).padStart(2,'0')}).join('');
+}
+
+// ===== EDITABLE TEXT FUNCTIONS =====
+var EDITABLE_IDS=['siteTitle','siteSubtitle','kpiLabel0','kpiSub0','kpiLabel1','kpiSub1','kpiLabel2','kpiSub2','kpiLabel3','kpiSub3','kpiLabel4','kpiSub4','kpiSavingsVal','footerText','scrollHint'];
+function enableEditableTexts(){
+EDITABLE_IDS.forEach(function(id){
+var el=document.getElementById(id);if(!el)return;
+el.contentEditable='true';el.classList.add('editable-hint');
+el.addEventListener('blur',saveEditableText);
+el.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();el.blur()}});
+});
+}
+function disableEditableTexts(){
+EDITABLE_IDS.forEach(function(id){
+var el=document.getElementById(id);if(!el)return;
+el.contentEditable='false';el.classList.remove('editable-hint');
+el.removeEventListener('blur',saveEditableText);
+});
+}
+function saveEditableText(){
+siteConfig.headerTitle=document.getElementById('siteTitle').textContent;
+siteConfig.headerSubtitle=document.getElementById('siteSubtitle').textContent;
+for(var i=0;i<5;i++){
+var lbl=document.getElementById('kpiLabel'+i);if(lbl)siteConfig.kpis[i].label=lbl.textContent;
+var sub=document.getElementById('kpiSub'+i);if(sub)siteConfig.kpis[i].sub=sub.innerHTML;
+}
+var sv=document.getElementById('kpiSavingsVal');if(sv)siteConfig.kpis[3].value=sv.textContent;
+siteConfig.footerText=document.getElementById('footerText').innerHTML;
+siteConfig.scrollHint=document.getElementById('scrollHint').textContent;
+saveSiteConfig();
+}
+
+// ===== PUBLISH FUNCTION =====
+function publishSite(){
+if(adminMode)saveEditableText();
+var h='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+var dataStr=JSON.stringify(ucData);
+h=h.replace(/\/\*DATA_START\*\/[\s\S]*?\/\*DATA_END\*\//g,'/*DATA_START*/var DEFAULT_DATA='+dataStr+';/*DATA_END*/');
+var cfgStr=JSON.stringify(siteConfig);
+h=h.replace(/\/\*SITECONFIG_START\*\/[\s\S]*?\/\*SITECONFIG_END\*\//g,'/*SITECONFIG_START*/var DEFAULT_SITE_CONFIG='+cfgStr+';/*SITECONFIG_END*/');
+var tlS=localStorage.getItem('sn_tl_start')||DEFAULT_TL_START;
+var tlE=localStorage.getItem('sn_tl_end')||DEFAULT_TL_END;
+var apw=getAdminPw();
+h=h.replace(/\/\*TL_DEFAULTS_START\*\/[\s\S]*?\/\*TL_DEFAULTS_END\*\//g,"/*TL_DEFAULTS_START*/var DEFAULT_PW='"+apw+"',DEFAULT_TL_START='"+tlS+"',DEFAULT_TL_END='"+tlE+"',MONTH_W=48;/*TL_DEFAULTS_END*/");
+// Clean up admin state in the published version
+h=h.replace(/contenteditable="true"/g,'contenteditable="false"');
+h=h.replace(/editable-hint/g,'');
+var blob=new Blob([h],{type:'text/html;charset=utf-8'});
+var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='index.html';
+document.body.appendChild(a);a.click();document.body.removeChild(a);
+setTimeout(function(){URL.revokeObjectURL(a.href)},100);
+var msg=document.getElementById('publishMsg');msg.classList.add('show');setTimeout(function(){msg.classList.remove('show')},4000);
+}
+
+// ===== REORDER FUNCTIONS =====
+function moveUc(idx,dir){
+if(event)event.stopPropagation();
+var ni=idx+dir;if(ni<0||ni>=ucData.length)return;
+var tmp=ucData[idx];ucData[idx]=ucData[ni];ucData[ni]=tmp;
+saveData();render();
+}
+var rowDragIdx=null;
+function initRowDrag(){
+document.querySelectorAll('.uc-row').forEach(function(row,i){
+var handle=row.querySelector('.row-drag-handle');
+if(!handle)return;
+handle.addEventListener('mousedown',function(e){e.stopPropagation();row.draggable=true;});
+row.addEventListener('dragstart',function(e){rowDragIdx=i;row.style.opacity='.4';e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','');});
+row.addEventListener('dragend',function(){row.style.opacity='';row.draggable=false;rowDragIdx=null;document.querySelectorAll('.uc-row').forEach(function(r){r.classList.remove('drag-over')});});
+row.addEventListener('dragover',function(e){e.preventDefault();e.dataTransfer.dropEffect='move';if(rowDragIdx!==null&&rowDragIdx!==i)row.classList.add('drag-over');});
+row.addEventListener('dragleave',function(){row.classList.remove('drag-over');});
+row.addEventListener('drop',function(e){e.preventDefault();row.classList.remove('drag-over');if(rowDragIdx===null||rowDragIdx===i)return;var item=ucData.splice(rowDragIdx,1)[0];ucData.splice(i,0,item);saveData();render();});
+});
+}
+
+
+/*DATA_START*/var DEFAULT_DATA=[
+{id:"nam-tax",name:"NAM Tax",pct:100,done:true,showLive:true,business:"NAM Finance / Tax",contact:"Andrew Baer",savings:"~800 h/year",desc:"Digital case management workflow for NAM tax certificate handling including automated email communication, CertCapture & Vertex data integration, and customer outreach tracking.",phases:[{name:"Requirements",start:"2022-06",end:"2022-09"},{name:"Design",start:"2022-10",end:"2022-12"},{name:"Development",start:"2023-01",end:"2025-12"},{name:"Testing / UAT",start:"2026-01",end:"2026-04"},{name:"Go-Live",start:"2026-04",end:"2026-04"},{name:"Production",start:"2026-04",end:"2026-12"}]},
+{id:"mcp",name:"MCP Germany / Swiss",pct:100,done:true,showLive:true,business:"MCP Operations",contact:"Guido Barth",savings:"License cost reduction (PEGA retirement)",desc:"Complete migration of MCP application from PEGA to ServiceNow platform.",phases:[{name:"Requirements",start:"2024-01",end:"2024-03"},{name:"Design",start:"2024-04",end:"2024-06"},{name:"Development",start:"2024-07",end:"2026-01"},{name:"Testing / UAT",start:"2026-02",end:"2026-03"},{name:"Go-Live",start:"2026-04",end:"2026-04"},{name:"Production",start:"2026-04",end:"2026-12"}]},
 {id:"dpw",name:"DPW",pct:95,done:false,business:"DX Procurement",contact:"Alexander Riess",savings:"~300 h/year",desc:"Digital Procurement Workflow automating scheduling agreements and purchase order changes in SAP.",phases:[{name:"Requirements",start:"2025-06",end:"2025-08"},{name:"Design",start:"2025-09",end:"2025-10"},{name:"Development",start:"2025-11",end:"2026-03"},{name:"Testing / UAT",start:"2026-04",end:"2026-05"},{name:"Go-Live",start:"2026-06",end:"2026-06"}]},
 {id:"ach",name:"ACH",pct:80,done:false,business:"Manufacturing (SCM SF Erlangen & Marburg)",contact:"Niklas Kaup, Alexander Riess",savings:"~1,000 h/year",desc:"Automated processing of 50k+ calibration certificates/year. ServiceNow Document Intelligence, SharePoint ingestion, UiPath RPA for SAP upload.",phases:[{name:"Requirements",start:"2025-10",end:"2025-11"},{name:"Design",start:"2025-12",end:"2026-01"},{name:"Development",start:"2026-02",end:"2026-04"},{name:"Testing / UAT",start:"2026-05",end:"2026-06"},{name:"Go-Live",start:"2026-07",end:"2026-07"}]},
 {id:"pcw",name:"Price Change Workflow",pct:80,done:false,business:"DX Procurement",contact:"Alexander Riess, Britta Nilson",savings:"~400 h/year",desc:"Digitized price change request workflow with multi-level approval routing. SAP integration.",phases:[{name:"Requirements",start:"2025-09",end:"2025-11"},{name:"Design",start:"2025-12",end:"2026-01"},{name:"Development",start:"2026-02",end:"2026-04"},{name:"Testing / UAT",start:"2026-05",end:"2026-06"},{name:"Go-Live",start:"2026-07",end:"2026-07"}]},
-{id:"fin2",name:"Financing 2.0",pct:100,done:true,business:"SHS Finance / Sales (FIL)",contact:"Britta Nilson, Alexander Riess",savings:"~500 h/year",desc:"Contract creation workflow for rental & leasing contracts. Migrated from PEGA.",phases:[{name:"Requirements",start:"2025-06",end:"2025-08"},{name:"Design",start:"2025-09",end:"2025-10"},{name:"Development",start:"2025-11",end:"2026-03"},{name:"Production",start:"2026-03",end:"2026-12"}]},
+{id:"fin2",name:"Financing 2.0",pct:100,done:true,showLive:true,business:"SHS Finance / Sales (FIL)",contact:"Britta Nilson, Alexander Riess",savings:"~500 h/year",desc:"Contract creation workflow for rental & leasing contracts. Migrated from PEGA.",phases:[{name:"Requirements",start:"2025-06",end:"2025-08"},{name:"Design",start:"2025-09",end:"2025-10"},{name:"Development",start:"2025-11",end:"2026-03"},{name:"Production",start:"2026-03",end:"2026-12"}]},
 {id:"courtesy",name:"Courtesy Tool",pct:95,done:false,business:"Customer Service",contact:"Team IPA",savings:"~150 h/year",desc:"Automated courtesy notification and follow-up workflow.",phases:[{name:"Requirements",start:"2025-07",end:"2025-08"},{name:"Design",start:"2025-09",end:"2025-10"},{name:"Development",start:"2025-11",end:"2026-02"},{name:"Testing / UAT",start:"2026-03",end:"2026-04"},{name:"Go-Live",start:"2026-05",end:"2026-05"}]},
-{id:"at-pricebook",name:"AT Pricebook",pct:100,done:true,business:"AT Sales",contact:"Team IPA",savings:"~250 h/year",desc:"Automated pricebook management and distribution workflow.",phases:[{name:"Requirements",start:"2025-06",end:"2025-08"},{name:"Design",start:"2025-09",end:"2025-10"},{name:"Development",start:"2025-11",end:"2026-01"},{name:"Testing / UAT",start:"2026-02",end:"2026-03"},{name:"Go-Live",start:"2026-03",end:"2026-03"},{name:"Production",start:"2026-03",end:"2026-12"}]},
-{id:"patac",name:"PATAC Exemption Workflow",pct:100,done:true,business:"Accounting / Finance",contact:"Team IPA",savings:"~200 h/year",desc:"Digital exemption request and approval workflow for PATAC.",phases:[{name:"Requirements",start:"2025-06",end:"2025-07"},{name:"Design",start:"2025-08",end:"2025-09"},{name:"Development",start:"2025-10",end:"2025-12"},{name:"Testing / UAT",start:"2026-01",end:"2026-02"},{name:"Go-Live",start:"2026-02",end:"2026-02"},{name:"Production",start:"2026-02",end:"2026-12"}]},
+{id:"at-pricebook",name:"AT Pricebook",pct:100,done:true,showLive:true,business:"AT Sales",contact:"Team IPA",savings:"~250 h/year",desc:"Automated pricebook management and distribution workflow.",phases:[{name:"Requirements",start:"2025-06",end:"2025-08"},{name:"Design",start:"2025-09",end:"2025-10"},{name:"Development",start:"2025-11",end:"2026-01"},{name:"Testing / UAT",start:"2026-02",end:"2026-03"},{name:"Go-Live",start:"2026-03",end:"2026-03"},{name:"Production",start:"2026-03",end:"2026-12"}]},
+{id:"patac",name:"PATAC Exemption Workflow",pct:100,done:true,showLive:true,business:"Accounting / Finance",contact:"Team IPA",savings:"~200 h/year",desc:"Digital exemption request and approval workflow for PATAC.",phases:[{name:"Requirements",start:"2025-06",end:"2025-07"},{name:"Design",start:"2025-08",end:"2025-09"},{name:"Development",start:"2025-10",end:"2025-12"},{name:"Testing / UAT",start:"2026-01",end:"2026-02"},{name:"Go-Live",start:"2026-02",end:"2026-02"},{name:"Production",start:"2026-02",end:"2026-12"}]},
 {id:"frg",name:"FRG Exemption Tool",pct:35,done:false,business:"SHS Accounting / Finance",contact:"Lars Weissenburger",savings:"~200 h/year",desc:"3-stage approval workflow for FRG exemptions (AC Hub, TMEs, Managers).",phases:[{name:"Requirements",start:"2026-03",end:"2026-04"},{name:"Design",start:"2026-04",end:"2026-05"},{name:"Development",start:"2026-05",end:"2026-07"},{name:"Testing / UAT",start:"2026-08",end:"2026-08"},{name:"Go-Live",start:"2026-09",end:"2026-09"}]},
 {id:"wanderlisten",name:"Wanderlisten",pct:15,done:false,business:"HR Organizational Management",contact:"Juan Diego Gantiva",savings:"Cost avoidance (15-30 min/case x 2000 cases/yr)",desc:"Automated Wanderlisten creation for org changes.",phases:[{name:"Requirements",start:"2026-04",end:"2026-05"},{name:"Design",start:"2026-05",end:"2026-06"},{name:"Development",start:"2026-06",end:"2026-07"},{name:"Testing / UAT",start:"2026-06",end:"2026-07"},{name:"Go-Live",start:"2026-07",end:"2026-07"}]},
 {id:"fun-user",name:"Request Functional User",pct:20,done:false,business:"SAP Authorization / IT Operations",contact:"Britta Nilson, Alexander Riess, Niklas Kaup",savings:"Compliance improvement + time savings",desc:"ServiceNow workspace for SAP functional user access.",phases:[{name:"Requirements",start:"2026-04",end:"2026-05"},{name:"Design",start:"2026-05",end:"2026-06"},{name:"Development",start:"2026-07",end:"2026-09"},{name:"Testing / UAT",start:"2026-10",end:"2026-10"},{name:"Go-Live",start:"2026-11",end:"2026-11"}]},
 {id:"gqm",name:"GQM SAP RA",pct:10,done:false,business:"Global Quality Management",contact:"Andrew Baer",savings:"Significant admin overhead reduction",desc:"Digitizing GQM SAP RA requests. Replaces 5 shared Outlook mailboxes.",phases:[{name:"Requirements",start:"2026-03",end:"2026-05"},{name:"Design",start:"2026-06",end:"2026-07"},{name:"Development",start:"2026-08",end:"2026-11"},{name:"Testing / UAT",start:"2026-12",end:"2026-12"},{name:"Go-Live",start:"2027-01",end:"2027-01"}]},
 {id:"at-scrap",name:"DE - AT Scrapping (Bonus)",pct:25,done:false,business:"AT Sales (Global)",contact:"Jitu Behera",savings:"~320 h/year",desc:"AT Elevate loyalty bonus validation workflow. Azure Form Recognizer. SN-001.",phases:[{name:"Requirements",start:"2025-05",end:"2025-07"},{name:"Design",start:"2025-08",end:"2025-10"},{name:"Development",start:"2025-11",end:"2026-04"},{name:"Testing / UAT",start:"2026-05",end:"2026-06"},{name:"Go-Live",start:"2026-07",end:"2026-07"}]}
-];
+];/*DATA_END*/
 
-loadData();buildTimeline();render();
+loadSiteConfig();loadData();buildTimeline();render();applySiteConfig();
 setTimeout(scrollToToday,100);
 </script>
 </body>
